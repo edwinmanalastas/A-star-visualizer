@@ -57,7 +57,7 @@ class Node:
         return self.color == PURPLE
     
     def reset(self):
-        self.color == WHITE
+        self.color = WHITE
 
     def make_start(self):
         self.color = ORANGE
@@ -178,22 +178,30 @@ def main(win, width):
                 node = grid[row][col]
 
                 # if initial node not there
-                if not start:
+                if not start and node != end:
                     start = node
                     start.make_start()
                 
                 # if goal node not there
-                elif not end:
+                elif not end and node != start:
                     end = node
                     end.make_end()
                 
                 # if we're not clicking on spot nor end
                 elif node != end and node != start:
-                    node.make_barrier()
+                    node.make_barrier() 
 
             # right mousebutton
             elif pygame.mouse.get_pressed()[2]:
-                pass
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked_pos(pos, ROWS, width)
+                node = grid[row][col]
+                # reset it to be white
+                node.reset()
+                if node == start:
+                    start = None
+                elif node == end:
+                    end = None
 
     # exits pygame
     pygame.quit()
