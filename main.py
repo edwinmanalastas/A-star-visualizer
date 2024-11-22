@@ -82,8 +82,23 @@ class Node:
         # draw a cube in pygame
         pygame.draw.rect(win, self.color,(self.x, self.y, self.width, self.width))
 
+    # check if barriers or not. If not, add to neighbours list
     def update_neighbors(self, grid):
-        pass
+        self.neighbors = []
+        # checking if row that we're at is less than total rows - 1
+        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN A ROW
+                self.neighbors.append(grid[self.row + 1][self.col]) # append to next row down
+
+        # if not at row 0, 
+        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # UP
+            self.neighbors.append(grid[self.row - 1][self.col]) 
+
+        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # RIGHT
+            self.neighbors.append(grid[self.row][self.col + 1]) 
+
+        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # LEFT
+            self.neighbors.append(grid[self.row][self.col - 1])
+
 
     # less than, compare 2 nodes together
     def __lt__(self, other):
@@ -96,6 +111,68 @@ def h(p1, p2):
     x2, y2 = p2
     return abs(x1 - x2) + abs (y1 - y2)
 
+def algorithm(draw, grid, start, end):
+    count = 0
+    open_set = PriorityQueue()
+    # add to PriorityQueue (add startNode with F score to openSet)
+    open_set.put((0, count, start)) # tie breakers
+    # backtracking 
+    came_from = {} # keeps track of which nodes came from where so we can find best path at the end
+    # shortest distance from start node to this node
+    g_score = {node: float("inf") for row in grid for node in row} 
+    g_score[start] = 0 
+    
+    # f is heuristic (predicted) from this node to end
+    f_score = {node: float("inf") for row in grid for node in row}
+    # f is initially heuristic from start to start
+    f_score[start] = h(start.get_pos(), end.get_pos())
+
+    # if node is in queue (open set) or not
+    open_set_hash = {start}
+    # If empty weve considered every possible node that were going to
+    while not open_set.empty():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        # index stores f_score, count, and node. We just want the node
+        # pop lowest value f_score from open set
+        # current node were looking at (start node)
+        current = open_set.get()[2]
+        # take what node we just popped out of priority queue
+        # and synchronize it in open set hash
+        open_set_hash.remove(current)
+
+        # if end node, we found the shortest path! reocnstruct and draw it
+        if current == end:
+            return True
+
+        # otherwise consider all neighbors of current node
+        for neighbor in current.neighbors:
+            # calculate temp g_score
+            temp_g_score = g_score[current] + 1 # assume all edges are 1
+
+            # if we found a better way to reach neighbor (less)
+            if temp_g_score < g_score[neighbor]:
+                # update because we found a better path using row, col for the node
+                came_from[neighbor] = current
+                g_score[neighbor] = temp_g_score
+                f_score[neighbor] = temp_g_score + h(neighbor.get_pos(), end.get_pos())
+                # add to open hash if they're already not in there
+                if neighbor not in open_set_hash:
+                    count += 1
+                    # put in new neighbor that has better path
+                    open_set.put((f_score[neighbor], count, neighbor))
+                    open_set_hash.add(neighbor)
+                    neighbor.make_open()
+        draw()
+
+        # if current is not the start node, make it closed (red)
+        if current != start:
+            current.make_closed()
+
+    # no path is found
+    return Fale
 # make a grid
 def make_grid(rows, width):
     grid = []
@@ -187,7 +264,7 @@ def main(win, width):
                     end = node
                     end.make_end()
                 
-                # if we're not clicking on spot nor end
+                # if we're not clicking on node nor end
                 elif node != end and node != start:
                     node.make_barrier() 
 
@@ -202,7 +279,16 @@ def main(win, width):
                     start = None
                 elif node == end:
                     end = None
-
+            
+            # did we press a key on keyDown. run algorithm
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and start and end:
+                    for row in grid:
+                        for node in row:
+                            # update all neighbors
+                            node.update_neighbors(grid)
+                    # once we start, we call algorithm function
+                    algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
     # exits pygame
     pygame.quit()
 
