@@ -254,10 +254,6 @@ def main(win, width):
             if event.type == pygame.QUIT:
                 run = False
 
-            # makes sure algorithm keeps going if events are made
-            if started:
-                continue
-
             # if user presses down on mouse
             # left mouse button
             if pygame.mouse.get_pressed()[0]:
@@ -301,6 +297,14 @@ def main(win, width):
                             node.update_neighbors(grid)
                     # once we start, we call algorithm function
                     algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
+
+                # clear if c is pressed
+                if event.key == pygame.K_c:
+                    start = None
+                    end = None
+                    # remake entire grid
+                    grid = make_grid(ROWS, width)
+
     # exits pygame
     pygame.quit()
 
