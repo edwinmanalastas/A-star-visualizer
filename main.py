@@ -59,6 +59,9 @@ class Node:
     def reset(self):
         self.color == WHITE
 
+    def make_start(self):
+        self.color = ORANGE
+
     def make_closed(self):
         self.color = RED
     
@@ -145,3 +148,54 @@ def get_clicked_pos(pos, rows, width):
     # return row, col of clicked
     return row, col
 
+def main(win, width):
+    ROWS = 50
+    # generate grid and gives us 2D array
+    grid = make_grid(ROWS, width)
+
+    start = None
+    end = None
+
+    run = True
+    started = False
+    while run:
+        draw(win, grid, ROWS, width)
+        # loop through all events and check what they are 
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            # makes sure algorithm keeps going if events are made
+            if started:
+                continue
+
+            # if user presses down on mouse
+            # left mouse button
+            if pygame.mouse.get_pressed()[0]:
+                pos = pygame.mouse.get_pos()
+                # gives us row, col we clicked on (node)
+                row, col = get_clicked_pos(pos, ROWS, width)
+                node = grid[row][col]
+
+                # if initial node not there
+                if not start:
+                    start = node
+                    start.make_start()
+                
+                # if goal node not there
+                elif not end:
+                    end = node
+                    end.make_end()
+                
+                # if we're not clicking on spot nor end
+                elif node != end and node != start:
+                    node.make_barrier()
+
+            # right mousebutton
+            elif pygame.mouse.get_pressed()[2]:
+                pass
+
+    # exits pygame
+    pygame.quit()
+
+main(WIN, WIDTH)
