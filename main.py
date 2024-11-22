@@ -111,6 +111,16 @@ def h(p1, p2):
     x2, y2 = p2
     return abs(x1 - x2) + abs (y1 - y2)
 
+# current node starts in end node
+# traverse from end node back to start node
+# eventually current will be equal to where we came from the last node
+def reconstruct_path(came_from, current, draw):
+    # while in dictionary (for backtracking)
+    while current in came_from:
+        current = came_from[current]
+        current.make_path()
+        draw()
+
 def algorithm(draw, grid, start, end):
     count = 0
     open_set = PriorityQueue()
@@ -145,6 +155,8 @@ def algorithm(draw, grid, start, end):
 
         # if end node, we found the shortest path! reocnstruct and draw it
         if current == end:
+            reconstruct_path(came_from, end, draw)
+            end.make_end()
             return True
 
         # otherwise consider all neighbors of current node
